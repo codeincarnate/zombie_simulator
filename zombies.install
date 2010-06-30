@@ -1,0 +1,40 @@
+<?php
+
+/**
+ * Implementation of hook_install().
+ */
+function zombies_install() {
+  module_load_include('inc', 'geo', 'includes/geo.api');
+  
+  $data = array(
+    'name' => 'zombies',
+    'title' => 'Zombies',
+    'table_name' => 'zombies',
+    'geo_type' => 1, // Point
+    'srid' => 4326,
+    'indexed' => TRUE,
+    'schema' => array(
+      'zombies' => array(
+        'description' => 'A table recording the location of all zombies.',
+        'fields' => array(
+          'zid' => array(
+            'type' => 'serial',
+            'unsigned' => TRUE,
+            'not null' => TRUE,
+          ),
+          'geo' => array(
+            'description' => 'The location of this zombie.',
+            'type' => 'blob',
+            'mysql_type' => 'geometry',
+            'pgsql_type' => 'geometry',
+            'gis type' => 'point',
+            'not null' => TRUE
+          ),
+        ),
+        'primary key' => array('zid'),
+      ),
+    ),
+  );
+  
+  geo_create_dataset($data);
+}

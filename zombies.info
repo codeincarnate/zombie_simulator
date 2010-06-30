@@ -1,0 +1,8 @@
+name = Zombie Apocalypse
+description = The Zombie Apocalypse modules simulates a zombie outbreak using geospatial databases.
+core = 6.x
+version = 6.x-0.5
+package = Zombies
+
+dependencies[] = geo
+dependencies[] = openlayers

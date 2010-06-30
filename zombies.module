@@ -1,0 +1,84 @@
+<?php 
+
+/**
+ * Implementation of hook_menu().
+ */
+function zombies_menu() {
+  $items['admin/settings/zombies'] = array(
+    'title' => t('Zombie Settings'),
+    'description' => t('Fight off the hoards!'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('zombies_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'pages/admin.pages.inc',
+  );
+  
+  $items['admin/settings/zombies/generate'] = array(
+    'title' => t('Generate'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  
+  $items['admin/settings/zombies/states'] = array(
+    'title' => t('States'),
+    'description' => t('A list of states in the US.'),
+    'page callback' => 'zombies_list_states',
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_TASK,
+  	'file' => 'pages/admin.pages.inc',
+  );
+  
+  $items['admin/settings/zombies/closest'] = array(
+    'title' => t('Find Zombies'),
+    'description' => t('Find those zombies!'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('zombies_find_closest'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'pages/admin.pages.inc',
+  );
+  
+  return $items;
+}
+
+
+/**
+ * Find the nearest zombie, return it's location and how far away it is.
+ * 
+ * @param $lng
+ *   The longitude of the point where we are. 
+ * @param $lat
+ * 	 The latitude of the point where we are.
+ */
+function zombies_nearest($lng, $lat) {
+  $distance = db_result(db_query("SELECT ST_Distance(ST_MakePoint(%d, %d), geo) 
+  			FROM {zombies} ORDER BY  ST_Distance(ST_MakePoint(%d, %d), geo) ASC LIMIT 1", $lng, $lat, $lng, $lat));
+  
+  return $distance / 0.00899322030318217;
+}
+
+
+/**
+ * Get the zombie forecast for a specific point.
+ * The area used will be a 5-mile radius around the point.
+ * 
+ * @param $lng
+ *   The longitude of the point to get the density for.
+ * @param $lat
+ *   The latitude of the point to get the density for.
+ * @param
+ *   The density in zombies per square mile.  
+ */
+function zombies_density($lng, $lat) {
+  $lng_1 = $lng - 0.2248305075795525;
+  $lat_1 = $lat - 0.2248305075795525;
+  
+  $lng_2 = $lng + 0.2248305075795525;
+  $lat_2 = $lat + 0.2248305075795525;
+  
+  $count = db_fetch_object(db_query("SELECT COUNT(*) FROM {zombies} WHERE ST_Contains(
+  			ST_MakeBox2D(ST_Point(%d, %d), ST_Point(%d, %d)),
+  			geo)", $lng_1, $lat_1, $lng_2, $lat_2));
+  
+  return $count;
+}
